@@ -20,7 +20,12 @@ typedef struct {
 void dht22_init(void);
 
 /**
- * @brief  Lee temperatura y humedad (bloquea unos 7 ms).
+ * @brief  Inicia la lectura bajando la línea de datos (no bloqueante).
+ */
+void dht22_start(void);
+
+/**
+ * @brief  Lee temperatura y humedad tras completar el pulso de inicio.
  * @param  data Donde se guardan los valores leídos.
  * @retval true si la lectura es válida, false si falló o el checksum no coincide.
  */

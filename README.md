@@ -51,11 +51,11 @@ La lógica de control opera según el siguiente diagrama de estados:
 ![Máquina de estados de clima](docs/img/mef_clima.png)
 
 ### Comportamiento de cada estado:
-* **INIT:** Inicialización del hardware y primera lectura del sensor.
-* **NORMAL:** Temperatura por debajo del umbral. El LED titila lento (1 Hz).
-* **ALARM:** Temperatura >= umbral configurado. El LED titila rápido (5 Hz). Cuenta con una histéresis de 0.5 °C para evitar que la alarma oscile al bajar la temperatura.
-* **CONFIG:** Modificación del umbral mediante el pulsador B1 (+1 °C de forma circular entre 15 °C y 40 °C) o por comandos serie. El LED queda encendido fijo. Si no se presiona nada durante 5 segundos, vuelve al modo correspondiente.
-* **ERROR:** Falla en la lectura o checksum del sensor DHT22. El LED se apaga y se indica el error en pantalla.
+* **INIT:** Inicialización del hardware y primera lectura del sensor. El LED LD2 queda apagado.
+* **NORMAL:** Temperatura por debajo del umbral de alarma. El LED LD2 titila lento (1 Hz: 500 ms encendido / 500 ms apagado).
+* **ALARM:** Temperatura actual >= umbral configurado. El LED LD2 titila rápido (5 Hz: 100 ms encendido / 100 ms apagado). Cuenta con una histéresis de 0.5 °C para evitar que la alarma prenda y apague seguido si la temperatura ronda el valor límite.
+* **CONFIG:** Ajuste del umbral mediante el pulsador B1 (+1 °C por pulsación entre 15 °C y 40 °C) o mediante comandos por terminal serie (`+`, `-`, `SET <temp>`). El LED LD2 queda encendido fijo. Si pasan 5 segundos sin tocar nada (timeout), vuelve automáticamente a `NORMAL` si la temperatura es menor al umbral, o a `ALARM` si la temperatura supera o iguala al umbral.
+* **ERROR:** Falla en la lectura o error de checksum con el sensor DHT22. El LED LD2 se apaga y la pantalla indica el estado de error.
 
 ---
 

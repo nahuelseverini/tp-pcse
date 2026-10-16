@@ -32,11 +32,6 @@ void dht22_port_set_input(void);
 void dht22_port_pin_write(bool level);
 
 /**
- * @brief  Espera en milisegundos (bloquea).
- */
-void dht22_port_delay_ms(uint32_t ms);
-
-/**
  * @brief  Espera en microsegundos (bloquea).
  */
 void dht22_port_delay_us(uint32_t us);

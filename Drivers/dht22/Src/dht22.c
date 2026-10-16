@@ -8,7 +8,6 @@
 #include "dht22_port.h"
 #include <stddef.h>
 
-#define START_LOW_MS      2     /* tiempo en bajo para pedirle una lectura al sensor */
 #define START_WAIT_US     30    /* espera antes de escuchar la respuesta */
 #define TIMEOUT_US        150   /* máximo que se espera cada cambio de nivel */
 #define BIT_1_MIN_US      40    /* un pulso alto más largo que esto es un 1 */
@@ -19,6 +18,13 @@ void dht22_init(void)
     dht22_port_init();
 }
 
+void dht22_start(void)
+{
+    /* Señal de inicio: baja la línea de datos */
+    dht22_port_set_output();
+    dht22_port_pin_write(false);
+}
+
 bool dht22_read(dht22_data_t *data)
 {
     if (data == NULL) {
@@ -27,10 +33,7 @@ bool dht22_read(dht22_data_t *data)
 
     uint8_t bytes[5] = {0};
 
-    /* Pedido de lectura: el micro baja la línea 2 ms y la suelta */
-    dht22_port_set_output();
-    dht22_port_pin_write(false);
-    dht22_port_delay_ms(START_LOW_MS);
+    /* Fin del pulso de inicio: libera la línea para que la pull-up la suba */
     dht22_port_pin_write(true);
     dht22_port_delay_us(START_WAIT_US);
     dht22_port_set_input();

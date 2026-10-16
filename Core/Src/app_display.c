@@ -84,7 +84,6 @@ void app_display_init(void)
         return;
     }
 
-    lcd_clear();
     show_line(0, "Monitor de clima");
     show_line(1, "Iniciando...");
 
@@ -107,7 +106,6 @@ void app_display_update(void)
             return;
         }
         showing_splash = false;
-        lcd_clear();
         must_redraw = true;
     }
 

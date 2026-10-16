@@ -50,11 +50,6 @@ void dht22_port_pin_write(bool level)
     HAL_GPIO_WritePin(DHT_PORT, DHT_PIN, level ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
-void dht22_port_delay_ms(uint32_t ms)
-{
-    HAL_Delay(ms);
-}
-
 void dht22_port_delay_us(uint32_t us)
 {
     bsp_delay_us(us);

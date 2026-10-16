@@ -11,10 +11,11 @@
 #include "bsp_delay.h"
 
 #define SAMPLE_INTERVAL_MS   2000U   /* cada cuánto se lee el sensor */
+#define START_PULSE_MS       3U      /* duración mínima del pulso de inicio en bajo */
 #define ALARM_HYSTERESIS_C   0.5f    /* la alarma se apaga 0.5 °C por debajo del umbral */
 #define BLINK_NORMAL_MS      500U    /* LED lento (1 Hz) */
 #define BLINK_ALARM_MS       100U    /* LED rápido (5 Hz) */
-#define CONFIG_TIMEOUT_MS    5000U   /* sin tocar nada, CONFIG vuelve a NORMAL */
+#define CONFIG_TIMEOUT_MS    5000U   /* tiempo sin actividad para salir de CONFIG */
 
 static climate_state_t current_state = CLIMATE_STATE_INIT;
 static float           temp_threshold = APP_CLIMATE_DEFAULT_THRESHOLD;
@@ -24,6 +25,8 @@ static float           current_hum = 0.0f;
 static bool            sensor_ok = false;
 
 static uint32_t        last_sample_tick = 0;
+static uint32_t        start_pulse_tick = 0;
+static bool            reading_in_progress = false;
 static uint32_t        last_blink_tick = 0;
 static uint32_t        config_timeout_tick = 0;
 
@@ -43,17 +46,29 @@ static void blink_led(uint32_t now, uint32_t period_ms)
 
 static void read_sensor_if_due(uint32_t now)
 {
-    if ((now - last_sample_tick) < SAMPLE_INTERVAL_MS) {
-        return;
-    }
-    last_sample_tick = now;
+    if (!reading_in_progress) {
+        if ((now - last_sample_tick) < SAMPLE_INTERVAL_MS) {
+            return;
+        }
+        /* Paso 1: baja la línea para pedir lectura (no bloqueante) */
+        dht22_start();
+        start_pulse_tick = now;
+        reading_in_progress = true;
+    } else {
+        if ((now - start_pulse_tick) < START_PULSE_MS) {
+            return;
+        }
+        /* Paso 2: pasados los 3 ms, suelta la línea y lee los 40 bits */
+        dht22_data_t data;
+        sensor_ok = dht22_read(&data);
 
-    dht22_data_t data;
-    sensor_ok = dht22_read(&data);
+        if (sensor_ok) {
+            current_temp = data.temperature;
+            current_hum = data.humidity;
+        }
 
-    if (sensor_ok) {
-        current_temp = data.temperature;
-        current_hum = data.humidity;
+        last_sample_tick = now;
+        reading_in_progress = false;
     }
 }
 
@@ -64,6 +79,8 @@ void app_climate_init(void)
     current_state = CLIMATE_STATE_INIT;
     temp_threshold = APP_CLIMATE_DEFAULT_THRESHOLD;
     last_sample_tick = bsp_get_tick();
+    start_pulse_tick = 0;
+    reading_in_progress = false;
     last_blink_tick = bsp_get_tick();
 }
 
@@ -131,6 +148,7 @@ void app_climate_update(void)
             if (button_pressed) {
                 /* Fuerza una lectura nueva del sensor en el próximo ciclo */
                 last_sample_tick = now - SAMPLE_INTERVAL_MS;
+                reading_in_progress = false;
             }
 
             if (sensor_ok) {
